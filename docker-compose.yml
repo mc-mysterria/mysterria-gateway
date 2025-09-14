@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mysterria-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MAIN_BACKEND_URL=${MAIN_BACKEND_URL}
+      - ARCHIVE_BACKEND_URL=${ARCHIVE_BACKEND_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - gateway-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: mysterria-redis
+    restart: unless-stopped
+    command: >
+      sh -c "
+        if [ -n '$$REDIS_PASSWORD' ]; then
+          redis-server --requirepass $$REDIS_PASSWORD --maxmemory 256mb --maxmemory-policy allkeys-lru
+        else
+          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+        fi
+      "
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: |
+        if [ -n "$REDIS_PASSWORD" ]; then
+          redis-cli -a "$REDIS_PASSWORD" ping
+        else
+          redis-cli ping
+        fi
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gateway-network
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  gateway-network:
+    driver: bridge

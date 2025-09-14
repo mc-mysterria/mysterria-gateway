@@ -1,11 +1,13 @@
-FROM maven:3.9.8-eclipse-temurin-21 AS build
+FROM gradle:8.10.2-jdk21-alpine AS build
 
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
+COPY build.gradle settings.gradle gradle.properties ./
+COPY gradle ./gradle
+COPY gradlew ./
+RUN gradle dependencies --no-daemon
 
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN gradle clean build -x test --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 
@@ -14,7 +16,6 @@ RUN addgroup -g 1001 -S appuser && \
 
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*.jar app.jar
 COPY --chown=appuser:appuser --from=build /app/build/libs/*.jar app.jar
 
 USER appuser

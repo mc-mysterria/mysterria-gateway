@@ -33,13 +33,12 @@ services:
     image: redis:7.2-alpine
     container_name: mysterria-redis
     restart: unless-stopped
-    network_mode: host
     command: >
       sh -c "
-        if [ -n '$REDIS_PASSWORD' ]; then
-          redis-server --requirepass $REDIS_PASSWORD --maxmemory 256mb --maxmemory-policy allkeys-lru --port 6379
+        if [ -n '$$REDIS_PASSWORD' ]; then
+          redis-server --requirepass $$REDIS_PASSWORD --maxmemory 256mb --maxmemory-policy allkeys-lru
         else
-          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --port 6379
+          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
         fi
       "
     environment:
@@ -47,11 +46,18 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      test: |
+        if [ -n "$REDIS_PASSWORD" ]; then
+          redis-cli -a "$REDIS_PASSWORD" ping
+        else
+          redis-cli ping
+        fi
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gateway-network
 
 volumes:
   redis-data:

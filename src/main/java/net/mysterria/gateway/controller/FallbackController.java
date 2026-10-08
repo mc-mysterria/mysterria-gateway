@@ -23,13 +23,4 @@ public class FallbackController {
                 )));
     }
 
-    @GetMapping("/archive")
-    public Mono<ResponseEntity<Map<String, Object>>> archiveFallback() {
-        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(Map.of(
-                        "error", "Archive API service is currently unavailable",
-                        "timestamp", LocalDateTime.now(),
-                        "service", "archive-api"
-                )));
-    }
 }

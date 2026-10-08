@@ -22,8 +22,6 @@ gateway:
   backend:
     main:
       url: ${MAIN_BACKEND_URL:http://195.201.242.209:9247}
-    archive:
-      url: ${ARCHIVE_BACKEND_URL:http://195.201.242.209:8347}
 
   auth:
     admin:
@@ -46,7 +44,11 @@ management:
 logging:
   level:
     net.mysterria.gateway: INFO
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.security: DEBUG
+    # Both of these were DEBUG, which logs every proxied request with its full
+    # header set - including `authorization: Bearer <jwt>`. Those are real user
+    # tokens, admin ones included, sitting in plaintext in the container logs and
+    # anything that drains them. Keep these at INFO or above.
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: WARN
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

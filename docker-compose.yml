@@ -7,11 +7,11 @@ services:
       dockerfile: Dockerfile
     container_name: mysterria-gateway
     restart: unless-stopped
+    cpuset: "8-19"
     ports:
-      - "8347:8080"
+      - "127.0.0.1:8347:8080"
     environment:
       - MAIN_BACKEND_URL=${MAIN_BACKEND_URL}
-      - ARCHIVE_BACKEND_URL=${ARCHIVE_BACKEND_URL}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -33,6 +33,9 @@ services:
     image: redis:7.2-alpine
     container_name: mysterria-redis
     restart: unless-stopped
+    ports:
+      - "88.99.58.85:6379:6379"
+    cpuset: "8-19"
     command: >
       sh -c "
         if [ -n '$$REDIS_PASSWORD' ]; then
@@ -65,4 +68,5 @@ volumes:
 
 networks:
   gateway-network:
+    name: gateway-network
     driver: bridge

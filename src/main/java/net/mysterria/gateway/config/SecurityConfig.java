@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/actuator/health").permitAll()
                         .pathMatchers("/actuator/**").hasRole("ADMIN")
-                        .pathMatchers("/api/**", "/archive/**").permitAll()
+                        .pathMatchers("/api/**", "/archive/**", "/mcp", "/mcp/**").permitAll()
                         .pathMatchers("/fallback/**").permitAll()
                         .anyExchange().authenticated()
                 )

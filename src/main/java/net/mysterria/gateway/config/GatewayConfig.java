@@ -3,6 +3,7 @@ package net.mysterria.gateway.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.cloud.gateway.support.RouteMetadataUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,6 +25,10 @@ public class GatewayConfig {
                                 .requestRateLimiter(config -> config
                                         .setRateLimiter(redisRateLimiter())
                                         .setKeyResolver(hostKeyResolver())))
+                        .uri(mainBackendUrl))
+                // MCP tool calls can scan Discord history for longer than the global 15s; the API authenticates the token.
+                .route("main-api-mcp", r -> r.path("/mcp", "/mcp/**")
+                        .metadata(RouteMetadataUtils.RESPONSE_TIMEOUT_ATTR, 60000)
                         .uri(mainBackendUrl))
                 .build();
     }

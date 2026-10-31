@@ -27,7 +27,10 @@ services:
       retries: 3
       start_period: 60s
     networks:
-      - gateway-network
+      gateway-network:
+        aliases:
+          - gateway
+          - mysterria-gateway
 
   redis:
     image: redis:7.2-alpine
@@ -60,13 +63,22 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - gateway-network
+      gateway-network:
+        # mysterria-backend (a separate Coolify app) reaches Redis by these names over
+        # gateway-network. Coolify renames containers, so the names must be aliases.
+        aliases:
+          - redis
+          - mysterria-redis
 
 volumes:
   redis-data:
-    driver: local
+    # Pinned to the volume the hand-rolled compose created; Coolify would otherwise
+    # start Redis on a fresh empty volume.
+    external: true
+    name: mysterria-gateway_redis-data
 
 networks:
+  # Shared with mysterria-backend, which also declares it external.
   gateway-network:
+    external: true
     name: gateway-network
-    driver: bridge
